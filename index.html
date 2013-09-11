@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Events</title>
+    <link href="lib/fullcalendar.css?body=1" media="screen" rel="stylesheet" type="text/css" />    
+    <link href="lib/jquery-ui-1.9.1.custom.css?body=1" media="screen" rel="stylesheet" type="text/css" />    
+    <script src="lib/moment.min.js?body=1" type="text/javascript"></script>
+    <script src="lib/jquery.js?body=1" type="text/javascript"></script>
+    <script src="lib/jquery-ui-1.9.1.custom.min.js" type="text/javascript"></script>
+    <script src="lib/fullcalendar.min.js" type="text/javascript"></script>  
+    <script src="lib/json2.js?body=1" type="text/javascript"></script>
+    <script src="lib/underscore-min.js" type="text/javascript"></script>      
+    <script src="lib/backbone-min.js" type="text/javascript"></script>      
+    <script src="lib/handlebars-1.0.0.beta.6.js" type="text/javascript"></script>      
+    <script src="app/application.js" type="text/javascript"></script>  
+    <script src="app/views/schedule_page.js" type="text/javascript"></script>  
+    <script src="app/views/visit_detail.js" type="text/javascript"></script>  
+    <script src="app/views/visit_list.js" type="text/javascript"></script>  
+    <script src="app/views/visit_edit_pane.js" type="text/javascript"></script>  
+    <script src="app/views/calendar_view.js" type="text/javascript"></script>  
+    <script src="app/models/visit.js" type="text/javascript"></script>  
+    <script src="app/collections/visits.js" type="text/javascript"></script>  
+    <script>
+    var restaurants = [{"id":9144,"date":"2012-11-21","start_time":"2012-11-21T10:00:00-05:00","end_time":"2012-11-21T08:30:00-05:00","duration":60,"location":{"id":1957260,"name":"Spoon and Fork","retailer_number":"1247","address":"2722 Alma School Road","city":"Mesa","state":"AZ","postal_code":"85210","country":"United States","lat":33.36534,"lng":-111.859135,"full_address":"2722 Alma School Road, Mesa, AZ"}},{"id":9145,"date":"2012-11-22","start_time":"2012-11-22T10:00:00-05:00","end_time":"2012-11-22T10:45:00-05:00","duration":60,"location":{"id":1958760,"name":"Pho 99","address":"2801 Lafrontera Boulevard","city":"Austin","state":"TX","postal_code":"78728","country":"United States","lat":30.4489,"lng":-97.6812,"full_address":"2801 Lafrontera Boulevard, Austin, TX"}},{"id":9146,"date":"2012-11-23","start_time":"2012-11-23T04:00:00-05:00","end_time":"2012-11-23T07:00:00-05:00","duration":90,"location":{"id":1958222,"name":"One The Run 19116","address":"27702 Crown Valley Parkway","city":"Ladera Ranch","state":"CA","postal_code":"92694","country":"United States","lat":33.56501,"lng":-117.644209,"full_address":"27702 Crown Valley Parkway, Ladera Ranch, CA"}},{"id":9147,"date":"2012-11-24","start_time":"2012-11-24T06:00:00-05:00","end_time":"2012-11-24T08:00:00-05:00","duration":120,"location":{"id":27434,"name":"Pita and Grill","address":"2750 Prospect Avenue","city":"Helena","state":"MT","postal_code":"59601","country":"United States","lat":46.5913,"lng":-111.991814,"full_address":"2750 Prospect Avenue, Helena, MT"}}];
+
+    $(function(){
+      App.currentPage = new App.Views.SchedulePage({'restaurants': restaurants});
+      App.currentPage.render();
+    });
+    </script>
+  <body class='application scheduled_calls' data-update-url='/ajax_update.js'>
+    <div id='main'>
+      <div id='content'>
+
+        <div id="left-panel" style="position:relative;width:30%;left:0px;top:0px;float:left;">
+          
+          <b><u>Plan your lunch for the week:</u></b>
+          <!-- VisitListView -->
+          <ul id="visit_list"></ul>
+        </div>
+        <div id="right-panel" style="position:relative;width:60%;left:0px;top:0px;float:left;">          
+          <!-- CalendarView  -->
+          <div id="visit_calendar"></div>
+        </div>      
+      </div>
+      <!-- VisitEditPane -->
+      <div id="visit_edit"></div>      
+      <div id="overlay" style="display:none;visiblity:hidden;background-color:#c0c0c0;opacity:0.5;position:absolute;width:100%;height:600px;left:0px;top:0px"></div>
+    </div>
+
+    <!-- Visit Detail template -->
+    <script id="tmpl-visit" type="text/x-handlebars"><div class='info'>
+      <div class='place'>
+        <strong>{{location.name}}</strong>
+        {{location.full_address}}
+        <br>
+        {{duration}}
+      </div>
+    </div>
+    <div class='where-when'>
+      <a class='map' href='https://maps.google.com/maps?q={{location.lat}},{{location.lng}}' target='_blank'>
+        <div class='pin'></div>
+        &nbsp;
+      </a>
+    </div>
+    <div class='clear'></div>
+    </script>
+
+    <!-- Visit List template -->
+    <script id="tmpl-confirmedlist" type="text/x-handlebars"><p>Calendar Will Go Here</p>
+    </script>
+
+    <!-- Visit Edit template -->
+    <script id="tmpl-visit-edit-pane" type="text/x-handlebars"><form id='visit-edit-form' style='position:absolute;left:350px;top:50px;background-color:#ffffff;z-index:10000;border-width:1px;border-style:solid;padding:30px'>
+      <span style='font-style:bold;font-size:20px;'>
+        {{location.name}} -
+      </span>
+      <br/>
+
+      {{location.full_address}}
+      ({{duration}})
+      <spacer style='font-size:16px;'>
+        <br/>
+        <br/>
+      </spacer>
+      <div id='visit-edit-datepicker' style='position:relative;float:left;font-size:16px;top:2px'>
+        <input class='date' style='position:relative;float:left;font-size:16px;' type='text' value='{{humanDate}}'>
+      </div>
+      <select class="time" id="time_drop_down" name="time_drop_down" style="font-size:18px;position:relative;top:1px">
+      <option value="9">9:00 am</option>
+      <option value="10">10:00 am</option>
+      <option value="11">11:00 am</option>
+      <option value="12">12:00 pm</option>
+      <option value="13">1:00 pm</option>
+      <option value="14">2:00 pm</option>
+      <option value="15">3:00 pm</option>
+      <option value="16">4:00 pm</option>
+      <option value="17">5:00 pm</option>
+      <option value="18">6:00 pm</option>
+      <option value="19">7:00 pm</option>
+      <option value="20">8:00 pm</option>
+      <option value="21">9:00 pm</option>
+      <br/>
+      <br/>
+      <input class='save' style='position:relative;left:0px;font-size:18px' type='submit' value='Save Changes'>
+      <input class='cancel' style='position:relative;left:0px;font-size:18px' type='submit' value='Cancel'>
+    </form>
+    </script>
+
+  </body>
+</html>
